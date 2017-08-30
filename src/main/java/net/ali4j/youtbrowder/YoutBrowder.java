@@ -5,6 +5,7 @@ package net.ali4j.youtbrowder;
  */
 import javafx.application.Application;
 import javafx.beans.value.ObservableValue;
+import javafx.concurrent.Worker;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Parent;
@@ -31,22 +32,26 @@ public class YoutBrowder extends Application {
     private static final Logger logger = Logger.getLogger(YoutBrowder.class);
 
     private OptionsDialog optionsDialog;
-    private Options options;
 
-
-    {
-
+    public static void setOptions(){
+        Options options = Options.getInstance();
+        if(options.getUseProxy()) {
+            System.getProperties().put("http.proxyHost", options.getHost());
+            System.getProperties().put("http.proxyPort", options.getPort());
+            System.getProperties().put("https.proxyHost", options.getHost());
+            System.getProperties().put("https.proxyPort", options.getPort());
+        } else {
+            System.getProperties().remove("http.proxyHost");
+            System.getProperties().remove("http.proxyPort");
+            System.getProperties().remove("https.proxyHost");
+            System.getProperties().remove("https.proxyPort");
+        }
     }
 
 
 
+
     public Parent createContent() {
-
-
-        System.setProperty("http.proxyHost", "127.0.0.1");
-        System.setProperty("http.proxyPort", "52967");
-        System.setProperty("https.proxyHost", "127.0.0.1");
-        System.setProperty("https.proxyPort", "52967");
 
         WebView webView = new WebView();
 
@@ -70,7 +75,11 @@ public class YoutBrowder extends Application {
 
         EventHandler<ActionEvent> optionsAction = e ->{
             logger.debug("options is clicked");
-            optionsDialog = new OptionsDialog();
+
+            if(optionsDialog==null)
+                optionsDialog = new OptionsDialog();
+            else
+                optionsDialog.show();
         };
 
 

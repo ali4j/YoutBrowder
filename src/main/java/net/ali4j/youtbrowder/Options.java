@@ -8,6 +8,18 @@ public class Options {
     private String port;
     private String host;
     private Boolean useProxy;
+    private static Options options;
+
+
+    private Options(){}
+
+    public static Options getInstance(){
+        if(options == null)
+            options = new Options();
+        return options;
+    }
+
+
 
     public String getPort() {
         return port;
@@ -31,5 +43,14 @@ public class Options {
 
     public void setUseProxy(Boolean useProxy) {
         this.useProxy = useProxy;
+    }
+
+    @Override
+    public String toString() {
+        return "Options{" +
+                "host='" + host + '\'' +
+                ", port='" + port + '\'' +
+                ", useProxy=" + useProxy +
+                '}';
     }
 }
