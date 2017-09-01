@@ -4,6 +4,7 @@ package net.ali4j.youtbrowder;
  * Created by ehsan on 8/29/2017.
  */
 import javafx.application.Application;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
 import javafx.event.ActionEvent;
@@ -32,6 +33,8 @@ public class YoutBrowder extends Application {
     private static final Logger logger = Logger.getLogger(YoutBrowder.class);
 
     private OptionsDialog optionsDialog;
+    private Button goButton;
+    private Button stopButton;
 
     public static void setOptions(){
         Options options = Options.getInstance();
@@ -65,8 +68,22 @@ public class YoutBrowder extends Application {
             locationField.setText(newValue);
         });
 
+
+        webEngine.getLoadWorker().stateProperty().addListener(
+            (observable, oldValue, newValue) -> {
+                if( newValue != Worker.State.SUCCEEDED ) return;
+                goButton.setDisable(false);
+                stopButton.setDisable(true);
+            }
+        );
+
+
+
         EventHandler<ActionEvent> goAction = e -> {
             logger.debug("loading address");
+
+            goButton.setDisable(true);
+            stopButton.setDisable(false);
             webEngine.load(locationField.getText().startsWith("http://")
                     ? locationField.getText()
                     : "http://" + locationField.getText());
@@ -82,20 +99,35 @@ public class YoutBrowder extends Application {
                 optionsDialog.show();
         };
 
+        EventHandler<ActionEvent> stopAction = e ->{
+            logger.debug("stop is clicked");
+            goButton.setDisable(false);
+            stopButton.setDisable(true);
+            webEngine.getLoadWorker().cancel();
+        };
 
-        Button goButton = new Button("Go");
+
+        goButton = new Button("Go");
         goButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
         goButton.setDefaultButton(true);
         goButton.setOnAction(goAction);
+
+        stopButton = new Button("Stop");
+        stopButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
+        stopButton.setDefaultButton(true);
+        stopButton.setOnAction(stopAction);
+        stopButton.setDisable(true);
+
 
         Button optionsButton = new Button("Options");
         optionsButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
         optionsButton.setDefaultButton(true);
         optionsButton.setOnAction(optionsAction);
 
+
         // Layout logic
         HBox hBox = new HBox(5);
-        hBox.getChildren().setAll(locationField, goButton, optionsButton);
+        hBox.getChildren().setAll(locationField, goButton, stopButton, optionsButton);
         HBox.setHgrow(locationField, Priority.ALWAYS);
 
         VBox vBox = new VBox(5);
