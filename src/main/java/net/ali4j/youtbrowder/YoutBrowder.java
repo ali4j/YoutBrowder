@@ -20,6 +20,12 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import org.apache.log4j.Logger;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.events.Event;
+import org.w3c.dom.events.EventListener;
+import org.w3c.dom.events.EventTarget;
 
 
 /**
@@ -69,14 +75,49 @@ public class YoutBrowder extends Application {
         });
 
 
+
+        webEngine.on
+        webEngine.documentProperty().addListener((observable1, oldValue1, newValue1) -> {
+            logger.debug("newValue:" + newValue1);
+        });
+
+        webEngine.getLoadWorker().property
+
         webEngine.getLoadWorker().stateProperty().addListener(
             (observable, oldValue, newValue) -> {
+
+                if(newValue== Worker.State.SCHEDULED){
+                    System.out.println("state: scheduled");
+                } else if(newValue== Worker.State.RUNNING){
+                    System.out.println("state: running");
+                } else if(newValue== Worker.State.SUCCEEDED){
+                    System.out.println("state: succeeded");
+                }
+
+
                 if( newValue != Worker.State.SUCCEEDED ) return;
+
+                logger.debug("webengine is loaded");
+
                 goButton.setDisable(false);
                 stopButton.setDisable(true);
+
+
+
+
+                EventListener listener = ev -> {
+                    String href = ((Element)ev.getTarget()).getAttribute("href");
+                    if(logger.isDebugEnabled()) logger.debug(href);
+                };
+
+                Document doc = webEngine.getDocument();
+                NodeList hrefList = doc.getElementsByTagName("a");
+                if(logger.isDebugEnabled()) logger.debug("href list size:" + hrefList.getLength());
+                for (int i=0; i<hrefList.getLength(); i++)
+                    ((EventTarget)hrefList.item(i)).addEventListener("click", listener, false);
+
             }
         );
-
 
 
         EventHandler<ActionEvent> goAction = e -> {
