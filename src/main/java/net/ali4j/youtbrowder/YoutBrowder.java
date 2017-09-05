@@ -182,7 +182,7 @@ public class YoutBrowder extends Application {
                 jQueryContents.append(inputLine);
             webEngine.executeScript(jQueryContents.toString());
             logger.trace("jquery is loaded and executed");
-            webEngine.executeScript(Constants.SCRIPT);
+            webEngine.executeScript(Constants.REGEXP_SCRIPT);
             logger.trace("script executed");
         } finally {
             if (in != null) {
