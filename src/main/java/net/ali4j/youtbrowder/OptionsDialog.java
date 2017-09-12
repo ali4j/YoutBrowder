@@ -6,7 +6,6 @@ import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
-import javafx.util.Pair;
 import org.apache.log4j.Logger;
 
 import java.util.Optional;
@@ -25,21 +24,16 @@ public class OptionsDialog {
     private TextField hostTextField;
     private CheckBox useProxyCheckBox;
     private Label useProxyLabel;
-    private Dialog<Pair<String, String>> dialog;
-    private ButtonType loginButtonType;
-
-
-    public void show(){
-        dialog.show();
-    }
+    private Dialog<ButtonType> dialog;
+    private ButtonType okButtonType;
 
     public OptionsDialog(){
         dialog = new Dialog<>();
         dialog.setTitle("Options");
 
         // Set the button types.
-        loginButtonType = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(loginButtonType, ButtonType.CANCEL);
+        okButtonType = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(okButtonType, ButtonType.CANCEL);
 
 
 
@@ -92,32 +86,25 @@ public class OptionsDialog {
 
 
         gridPane.getChildren().add(vBox);
-
-
         dialog.getDialogPane().setContent(gridPane);
 
         // Request focus on the username field by default.
         Platform.runLater(hostTextField::requestFocus);
 
-        // Convert the result to a username-password-pair when the login button is clicked.
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == loginButtonType) {
-                return new Pair<>(hostTextField.getText(), portTextField.getText());
-            }
-            return null;
-        });
-
-        Optional<Pair<String, String>> result = dialog.showAndWait();
-
+        Optional<ButtonType> result = dialog.showAndWait();
         result.ifPresent(pair -> {
+            if (logger.isDebugEnabled()) logger.debug("if present");
 
-            Options options = Options.getInstance();
-            options.setUseProxy(Boolean.TRUE);
-            options.setHost(pair.getKey());
-            options.setPort(pair.getValue());
-            if(logger.isDebugEnabled()) logger.debug(options.toString());
-            YoutBrowder.setOptions();
-
+            if(!pair.getButtonData().isCancelButton()){
+                Config.setUSEPROXY(Boolean.TRUE);
+                Config.setHTTPPROXYHOST(hostTextField.getText());
+                Config.setHTTPPROXYPORT(portTextField.getText());
+                Config.setHTTPSPROXYHOST(hostTextField.getText());
+                Config.setHTTPSPROXYPORT(portTextField.getText());
+                YoutBrowder.setOptions();
+                Config.store();
+                logger.info("user clicked ok button, properties are set in config class also are stored in properties file");
+            }
         });
     }
 }

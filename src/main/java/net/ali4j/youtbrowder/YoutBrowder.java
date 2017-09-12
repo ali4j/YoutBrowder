@@ -1,7 +1,7 @@
 package net.ali4j.youtbrowder;
 
 /**
- * Created by ehsan on 8/29/2017.
+ * Created by ali4j on 8/29/2017.
  */
 
 import javafx.application.Application;
@@ -47,12 +47,11 @@ public class YoutBrowder extends Application {
     private Button stopButton;
 
     public static void setOptions(){
-        Options options = Options.getInstance();
-        if(options.getUseProxy()) {
-            System.getProperties().put("http.proxyHost", options.getHost());
-            System.getProperties().put("http.proxyPort", options.getPort());
-            System.getProperties().put("https.proxyHost", options.getHost());
-            System.getProperties().put("https.proxyPort", options.getPort());
+        if(Config.isUSEPROXY()){
+            System.getProperties().put("http.proxyHost", Config.getHTTPPROXYHOST());
+            System.getProperties().put("http.proxyPort", Config.getHTTPPROXYPORT());
+            System.getProperties().put("https.proxyHost", Config.getHTTPSPROXYHOST());
+            System.getProperties().put("https.proxyPort", Config.getHTTPSPROXYPORT());
         } else {
             System.getProperties().remove("http.proxyHost");
             System.getProperties().remove("http.proxyPort");
@@ -121,10 +120,7 @@ public class YoutBrowder extends Application {
 
         EventHandler<ActionEvent> optionsAction = e ->{
             logger.debug("options is clicked");
-            if(optionsDialog==null)
-                optionsDialog = new OptionsDialog();
-            else
-                optionsDialog.show();
+            optionsDialog = new OptionsDialog();
         };
 
         EventHandler<ActionEvent> stopAction = e ->{
