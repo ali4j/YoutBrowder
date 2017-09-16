@@ -40,6 +40,9 @@ public class OptionsDialog {
         useProxyLabel = new Label("use proxy:");
 
         useProxyCheckBox = new CheckBox();
+
+
+
         useProxyCheckBox.setOnAction(e -> {
             if(useProxyCheckBox.isSelected()) {
                 hostTextField.setDisable(false);
@@ -51,13 +54,23 @@ public class OptionsDialog {
         });
 
         hostTextField = new TextField();
-        hostTextField.setPromptText("host");
-        hostTextField.setDisable(true);
-
         portTextField = new TextField();
-        portTextField.setPromptText("port");
-        portTextField.setMaxWidth(70);
-        portTextField.setDisable(true);
+
+        if(Config.isUSEPROXY()) {
+            useProxyCheckBox.setSelected(true);
+            hostTextField.setText(Config.getHTTPPROXYHOST());
+            portTextField.setText(Config.getHTTPPROXYPORT());
+            hostTextField.setDisable(false);
+            portTextField.setDisable(false);
+        } else {
+            hostTextField.setPromptText("host");
+            portTextField.setPromptText("port");
+            hostTextField.setDisable(true);
+            portTextField.setMaxWidth(70);
+            portTextField.setDisable(true);
+        }
+
+
 
 
 
@@ -88,6 +101,8 @@ public class OptionsDialog {
         gridPane.getChildren().add(vBox);
         dialog.getDialogPane().setContent(gridPane);
 
+
+
         // Request focus on the username field by default.
         Platform.runLater(hostTextField::requestFocus);
 
@@ -96,7 +111,7 @@ public class OptionsDialog {
             if (logger.isDebugEnabled()) logger.debug("if present");
 
             if(!pair.getButtonData().isCancelButton()){
-                Config.setUSEPROXY(Boolean.TRUE);
+                Config.setUSEPROXY(useProxyCheckBox.isSelected());
                 Config.setHTTPPROXYHOST(hostTextField.getText());
                 Config.setHTTPPROXYPORT(portTextField.getText());
                 Config.setHTTPSPROXYHOST(hostTextField.getText());
@@ -106,5 +121,8 @@ public class OptionsDialog {
                 logger.info("user clicked ok button, properties are set in config class also are stored in properties file");
             }
         });
+
+
+
     }
 }
