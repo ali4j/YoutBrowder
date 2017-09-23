@@ -4,6 +4,8 @@ package net.ali4j.youtbrowder;
  * Created by ali4j on 8/29/2017.
  */
 
+import com.sun.webkit.dom.HTMLDocumentImpl;
+import com.sun.webkit.dom.HTMLElementImpl;
 import javafx.application.Application;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
@@ -26,6 +28,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.events.EventListener;
 import org.w3c.dom.events.EventTarget;
+import org.w3c.dom.events.MouseEvent;
+import org.w3c.dom.html.HTMLElement;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -65,7 +69,18 @@ public class YoutBrowder extends Application {
         WebView webView = new WebView();
 
         final WebEngine webEngine = webView.getEngine();
-        webEngine.load(Constants.DEFAULT_URL);
+
+        webEngine.documentProperty().addListener((observable, oldDoc, newDoc) -> {
+            HTMLDocumentImpl realMcCoy = (HTMLDocumentImpl) newDoc;
+            realMcCoy.setOnmousedown(evt -> {
+                String href = ((Element)evt.getTarget()).getAttribute("href");
+                logger.debug("clicked link:" + href);
+            });
+
+
+        });
+
+       webEngine.load(Constants.DEFAULT_URL);
 
         final TextField locationField = new TextField(Constants.DEFAULT_URL);
         webEngine.locationProperty().addListener(
@@ -158,6 +173,14 @@ public class YoutBrowder extends Application {
         vBox.getChildren().setAll(hBox, webView);
         vBox.setPrefSize(800, 400);
         VBox.setVgrow(webView, Priority.ALWAYS);
+
+
+        /*webView.setOnMouseClicked(mouseEvent -> {
+            Object obj = mouseEvent.getSource();
+            logger.debug("mouse clicked");
+        });*/
+
+
         return vBox;
     }
 
