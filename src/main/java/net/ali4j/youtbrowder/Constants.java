@@ -11,14 +11,15 @@ public interface Constants {
     String CONFIG_FILE_LOCATION = System.getProperty("user.home") + File.separator
             + "youtbrowder" + File.separator + CONFIG_FILE_NAME;
 
+    String Youtube_Address_Pattern = "https://www.youtube.com/watch?v=AbWBviQCMEE";
+    String YOUTUBE_ADDRESS_BASE = "https://www.youtube.com";
+
     boolean USEP_ROXY       = false;
     String HTTP_PROXY_HOST  = null;
     String HTTP_PROXY_PORT  = null;
     String HTTPS_PROXY_HOST = null;
     String HTTPS_PROXY_PORT = null;
-
-
-
+    String DEFAULT_SAVE_LOCATION = System.getProperty("user.home");
 
     String JQUERY_LOCATION = "https://code.jquery.com/jquery-3.2.1.min.js";
     String SCRIPT          = "$(\"a:visible\").each(function() {$(this).css(\"text-transform\", \"uppercase\");});";

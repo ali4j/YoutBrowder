@@ -4,8 +4,8 @@ package net.ali4j.youtbrowder;
  * Created by ali4j on 8/29/2017.
  */
 
+import com.github.axet.vget.VGet;
 import com.sun.webkit.dom.HTMLDocumentImpl;
-import com.sun.webkit.dom.HTMLElementImpl;
 import javafx.application.Application;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
@@ -28,12 +28,12 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.events.EventListener;
 import org.w3c.dom.events.EventTarget;
-import org.w3c.dom.events.MouseEvent;
-import org.w3c.dom.html.HTMLElement;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -45,10 +45,15 @@ import java.net.URLConnection;
 public class YoutBrowder extends Application {
 
     private static final Logger logger = Logger.getLogger(YoutBrowder.class);
+    public static String CurrentLink = "";
 
     private OptionsDialog optionsDialog;
     private Button goButton;
     private Button stopButton;
+    private Button downloadCurrentLinkButton;
+    private Button exitButton;
+    private Button optionsButton;
+
 
     public static void setOptions(){
         if(Config.isUSEPROXY()){
@@ -74,6 +79,7 @@ public class YoutBrowder extends Application {
             HTMLDocumentImpl realMcCoy = (HTMLDocumentImpl) newDoc;
             realMcCoy.setOnmousedown(evt -> {
                 String href = ((Element)evt.getTarget()).getAttribute("href");
+                CurrentLink = href;
                 logger.debug("clicked link:" + href);
             });
 
@@ -123,6 +129,12 @@ public class YoutBrowder extends Application {
         );
 
 
+        EventHandler<ActionEvent> exitAction = e -> {
+            logger.debug("exit button is clicked");
+            //TODO: pause any active download before exiting
+            System.exit(1);
+        };
+
         EventHandler<ActionEvent> goAction = e -> {
             logger.debug("loading address");
             goButton.setDisable(true);
@@ -145,6 +157,27 @@ public class YoutBrowder extends Application {
             webEngine.getLoadWorker().cancel();
         };
 
+        EventHandler<ActionEvent> downloadCurrentAction = evt ->{
+            logger.debug("download current is clicked");
+            try{
+
+                if(CurrentLink.isEmpty()) throw new MalformedURLException("please click on a youtube video link");
+
+                String videoUrlString = Constants.YOUTUBE_ADDRESS_BASE + CurrentLink;
+                URL videoUrl = new URL(videoUrlString);
+                VGet v = new VGet(videoUrl, new File(Constants.DEFAULT_SAVE_LOCATION));
+                v.download();
+            } catch (Exception e){
+                logger.error(e.getMessage(), e);
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText("Exception Happended");
+                if(e instanceof MalformedURLException) alert.setContentText("wrong url");
+                else alert.setContentText("unknown exception happended");
+                alert.showAndWait();
+            }
+        };
+
 
         goButton = new Button("Go");
         goButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
@@ -157,29 +190,32 @@ public class YoutBrowder extends Application {
         stopButton.setOnAction(stopAction);
         stopButton.setDisable(true);
 
+        downloadCurrentLinkButton= new Button("DownCurrLin");
+        downloadCurrentLinkButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
+        downloadCurrentLinkButton.setDefaultButton(true);
+        downloadCurrentLinkButton.setOnAction(downloadCurrentAction);
 
-        Button optionsButton = new Button("Options");
+
+        optionsButton = new Button("Options");
         optionsButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
         optionsButton.setDefaultButton(true);
         optionsButton.setOnAction(optionsAction);
 
+        exitButton = new Button("Exit");
+        exitButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
+        exitButton.setDefaultButton(true);
+        exitButton.setOnAction(exitAction);
+
 
         // Layout logic
         HBox hBox = new HBox(5);
-        hBox.getChildren().setAll(locationField, goButton, stopButton, optionsButton);
+        hBox.getChildren().setAll(locationField,downloadCurrentLinkButton, goButton, stopButton, optionsButton, exitButton);
         HBox.setHgrow(locationField, Priority.ALWAYS);
 
         VBox vBox = new VBox(5);
         vBox.getChildren().setAll(hBox, webView);
         vBox.setPrefSize(800, 400);
         VBox.setVgrow(webView, Priority.ALWAYS);
-
-
-        /*webView.setOnMouseClicked(mouseEvent -> {
-            Object obj = mouseEvent.getSource();
-            logger.debug("mouse clicked");
-        });*/
-
 
         return vBox;
     }
