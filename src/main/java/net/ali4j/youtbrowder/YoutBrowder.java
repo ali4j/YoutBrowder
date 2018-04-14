@@ -1,10 +1,7 @@
 package net.ali4j.youtbrowder;
 
-/**
- * Created by ali4j on 8/29/2017.
- */
-
 import com.github.axet.vget.VGet;
+import com.sun.webkit.dom.HTMLAnchorElementImpl;
 import com.sun.webkit.dom.HTMLDocumentImpl;
 import javafx.application.Application;
 import javafx.beans.value.ObservableValue;
@@ -25,6 +22,7 @@ import javafx.stage.Stage;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.events.EventListener;
 import org.w3c.dom.events.EventTarget;
@@ -45,7 +43,7 @@ import java.net.URLConnection;
 public class YoutBrowder extends Application {
 
     private static final Logger logger = Logger.getLogger(YoutBrowder.class);
-    public static String CurrentLink = "";
+    public static String currentLink = "https://youtube.com";
 
     private OptionsDialog optionsDialog;
     private Button goButton;
@@ -53,6 +51,9 @@ public class YoutBrowder extends Application {
     private Button downloadCurrentLinkButton;
     private Button exitButton;
     private Button optionsButton;
+
+    private static final String YOUTUBE_VIDEO_URL_PATTERN = "^(https\\:\\/\\/)(www\\.)?(youtube.com\\/watch\\?v=).+$";
+    private static final String YOUTUBE_URL_PATTERN = "^(https\\:\\/\\/)(www\\.)?(youtube.com)\\/?$";
 
 
     public static void setOptions(){
@@ -74,19 +75,37 @@ public class YoutBrowder extends Application {
         WebView webView = new WebView();
 
         final WebEngine webEngine = webView.getEngine();
+        webEngine.load(Constants.DEFAULT_URL);
 
         webEngine.documentProperty().addListener((observable, oldDoc, newDoc) -> {
             HTMLDocumentImpl realMcCoy = (HTMLDocumentImpl) newDoc;
+            if(realMcCoy==null) return;
             realMcCoy.setOnmousedown(evt -> {
-                String href = ((Element)evt.getTarget()).getAttribute("href");
-                CurrentLink = href;
-                logger.debug("clicked link:" + href);
+                Element element = (Element)evt.getTarget();
+                logger.debug("clicked element name:"+element.getTagName());
+
+                if("SPAN".equals(element.getTagName())) {
+                    Node parent = element.getParentNode();
+                    logger.debug("parent node name:" +  parent.getNodeName() +
+                            ", link:" + ((HTMLAnchorElementImpl) parent).getAttribute("href"));
+                    currentLink = ((HTMLAnchorElementImpl) parent).getAttribute("href");
+                } else if("IMG".equals(element.getTagName())) {
+                    Node parent = element.getParentNode();
+                    Node parentParent = parent.getParentNode();
+                    Node parentParentParentAsA =  parentParent.getParentNode();
+
+                    String href = ((HTMLAnchorElementImpl) parentParentParentAsA).getAttribute("href");
+
+                    logger.debug("parent node name:" +  parentParentParentAsA.getNodeName() +
+                            ", link:" + href);
+                    currentLink = href;
+                } else {
+                    String href = element.getAttribute("href");
+                    currentLink = href;
+                }
+                logger.debug("clicked link:" + currentLink);
             });
-
-
         });
-
-       webEngine.load(Constants.DEFAULT_URL);
 
         final TextField locationField = new TextField(Constants.DEFAULT_URL);
         webEngine.locationProperty().addListener(
@@ -137,11 +156,19 @@ public class YoutBrowder extends Application {
 
         EventHandler<ActionEvent> goAction = e -> {
             logger.debug("loading address");
-            goButton.setDisable(true);
-            stopButton.setDisable(false);
-            webEngine.load(locationField.getText().startsWith("http://")
-                    ? locationField.getText()
-                    : "http://" + locationField.getText());
+            if(currentLink!=null &
+                    !locationField.getText().matches(YOUTUBE_VIDEO_URL_PATTERN)
+                    & !locationField.getText().matches(YOUTUBE_URL_PATTERN))  {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText("invalid url");
+                alert.setContentText("this link is not a valid youtube video link");
+                alert.showAndWait();
+            } else {
+                goButton.setDisable(true);
+                stopButton.setDisable(false);
+                webEngine.load(locationField.getText());
+            }
         };
         locationField.setOnAction(goAction);
 
@@ -161,9 +188,10 @@ public class YoutBrowder extends Application {
             logger.debug("download current is clicked");
             try{
 
-                if(CurrentLink.isEmpty()) throw new MalformedURLException("please click on a youtube video link");
+                if(currentLink==null | !currentLink.matches(YOUTUBE_URL_PATTERN))
+                    throw new MalformedURLException("please click on a youtube video link");
 
-                String videoUrlString = Constants.YOUTUBE_ADDRESS_BASE + CurrentLink;
+                String videoUrlString = Constants.YOUTUBE_ADDRESS_BASE + currentLink;
                 URL videoUrl = new URL(videoUrlString);
                 VGet v = new VGet(videoUrl, new File(Constants.DEFAULT_SAVE_LOCATION));
                 v.download();
