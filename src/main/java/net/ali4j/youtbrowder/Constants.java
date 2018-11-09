@@ -6,7 +6,8 @@ import java.io.File;
  * Created by ehsan on 9/4/2017.
  */
 public interface Constants {
-    String DEFAULT_URL = "https://youtube.com";
+    /*String DEFAULT_URL = "https://youtube.com";*/
+    String DEFAULT_URL = "https://youtube.com/watch?v=raUIHXgqDKs";
     String CONFIG_FILE_NAME = "config.properties";
     String CONFIG_FILE_LOCATION = System.getProperty("user.home") + File.separator
             + "youtbrowder" + File.separator + CONFIG_FILE_NAME;

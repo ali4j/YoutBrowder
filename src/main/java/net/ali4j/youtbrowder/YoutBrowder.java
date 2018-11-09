@@ -51,9 +51,10 @@ public class YoutBrowder extends Application {
     private Button downloadCurrentLinkButton;
     private Button exitButton;
     private Button optionsButton;
+    private TextField locationField;
 
-    private static final String YOUTUBE_VIDEO_URL_PATTERN = "^(https\\:\\/\\/)(www\\.)?(youtube.com\\/watch\\?v=).+$";
-    private static final String YOUTUBE_URL_PATTERN = "^(https\\:\\/\\/)(www\\.)?(youtube.com)\\/?$";
+    private static final String YOUTUBE_VIDEO_URL_PATTERN = "^(https:\\/\\/)(www\\.)?(youtube.com\\/watch\\?v=).+$";
+    private static final String YOUTUBE_URL_PATTERN = "^(https:\\/\\/)(www\\.)?(youtube.com)\\/?$";
 
 
     public static void setOptions(){
@@ -83,35 +84,41 @@ public class YoutBrowder extends Application {
             realMcCoy.setOnmousedown(evt -> {
                 Element element = (Element)evt.getTarget();
                 logger.debug("clicked element name:"+element.getTagName());
-
                 if("SPAN".equals(element.getTagName())) {
                     Node parent = element.getParentNode();
-                    logger.debug("parent node name:" +  parent.getNodeName() +
-                            ", link:" + ((HTMLAnchorElementImpl) parent).getAttribute("href"));
-                    currentLink = ((HTMLAnchorElementImpl) parent).getAttribute("href");
+                    if (parent instanceof HTMLAnchorElementImpl){
+                        logger.debug("parent node name:" + parent.getNodeName() +
+                                ", link:" + ((HTMLAnchorElementImpl) parent).getAttribute("href"));
+                        currentLink = ((HTMLAnchorElementImpl) parent).getAttribute("href");
+                    }else logger.debug("the parent of current SPAN is not ANCHOR tag, so current link is null");
                 } else if("IMG".equals(element.getTagName())) {
                     Node parent = element.getParentNode();
                     Node parentParent = parent.getParentNode();
                     Node parentParentParentAsA =  parentParent.getParentNode();
-
-                    String href = ((HTMLAnchorElementImpl) parentParentParentAsA).getAttribute("href");
-
-                    logger.debug("parent node name:" +  parentParentParentAsA.getNodeName() +
-                            ", link:" + href);
-                    currentLink = href;
+                    if(parentParentParentAsA instanceof HTMLAnchorElementImpl) {
+                        String href = ((HTMLAnchorElementImpl) parentParentParentAsA).getAttribute("href");
+                        logger.debug("parent node name:" +  parentParentParentAsA.getNodeName() +
+                                ", link:" + href);
+                        currentLink = href;
+                    } else logger.debug("an IMG tag is clicked but its 3rd predecessor parents is not an ANCHOR element so current link is null");
                 } else {
                     String href = element.getAttribute("href");
                     currentLink = href;
                 }
-                logger.debug("clicked link:" + currentLink);
+                if(currentLink!=null) {
+                    locationField.setText(Constants.DEFAULT_URL + currentLink);
+                    logger.debug("###clicked link:" + currentLink + "###");
+                }
             });
         });
 
-        final TextField locationField = new TextField(Constants.DEFAULT_URL);
+        locationField = new TextField(Constants.DEFAULT_URL);
         webEngine.locationProperty().addListener(
                 (ObservableValue<? extends String> observable, String oldValue, String newValue) ->
                 {
-            locationField.setText(newValue);
+
+                    logger.debug("locationField is set to a value:" + newValue);
+                    locationField.setText(newValue);
         });
 
 
@@ -187,14 +194,20 @@ public class YoutBrowder extends Application {
         EventHandler<ActionEvent> downloadCurrentAction = evt ->{
             logger.debug("download current is clicked");
             try{
-
-                if(currentLink==null | !currentLink.matches(YOUTUBE_URL_PATTERN))
+                String fullLink = Constants.DEFAULT_URL + currentLink;
+                /*if(fullLink==null | !fullLink.matches(YOUTUBE_URL_PATTERN)){*/
+                if(fullLink==null | !fullLink.matches(YOUTUBE_VIDEO_URL_PATTERN)){
+                    logger.info("currentLink="+fullLink+ " is not valid youtube link");
                     throw new MalformedURLException("please click on a youtube video link");
+                }
 
-                String videoUrlString = Constants.YOUTUBE_ADDRESS_BASE + currentLink;
+
+                /*String videoUrlString = Constants.YOUTUBE_ADDRESS_BASE + currentLink;*/
+                String videoUrlString = fullLink;
                 URL videoUrl = new URL(videoUrlString);
                 VGet v = new VGet(videoUrl, new File(Constants.DEFAULT_SAVE_LOCATION));
                 v.download();
+                logger.info("you are downloading: " + currentLink + " to " + Constants.DEFAULT_SAVE_LOCATION);
             } catch (Exception e){
                 logger.error(e.getMessage(), e);
                 Alert alert = new Alert(Alert.AlertType.ERROR);

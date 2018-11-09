@@ -16,7 +16,7 @@ public class YouTubeVideo {
     private String id;
     private String title;
     private String error;
-    private YouTubeURL[] all_videos;
+//    private YouTubeURL[] all_videos;
 
     public YouTubeVideo(String url) {
         this.url = url;
