@@ -195,19 +195,30 @@ public class YoutBrowder extends Application {
             logger.debug("download current is clicked");
             try{
                 String fullLink = Constants.DEFAULT_URL + currentLink;
-                /*if(fullLink==null | !fullLink.matches(YOUTUBE_URL_PATTERN)){*/
                 if(fullLink==null | !fullLink.matches(YOUTUBE_VIDEO_URL_PATTERN)){
                     logger.info("currentLink="+fullLink+ " is not valid youtube link");
                     throw new MalformedURLException("please click on a youtube video link");
                 }
 
-
-                /*String videoUrlString = Constants.YOUTUBE_ADDRESS_BASE + currentLink;*/
                 String videoUrlString = fullLink;
-                URL videoUrl = new URL(videoUrlString);
-                VGet v = new VGet(videoUrl, new File(Constants.DEFAULT_SAVE_LOCATION));
-                v.download();
-                logger.info("you are downloading: " + currentLink + " to " + Constants.DEFAULT_SAVE_LOCATION);
+
+                Runnable downloadThread = () -> {
+                    try {
+                        URL videoUrl = new URL(videoUrlString);
+                        VGet v = new VGet(videoUrl, new File(Constants.DEFAULT_SAVE_LOCATION));
+                        v.download();
+                    }catch(MalformedURLException e){
+                        logger.error("exception happened while downloading file, url is not valid");
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Error");
+                        alert.setHeaderText("Exception Happened");
+                        alert.setContentText("wrong url");
+                        alert.showAndWait();
+                    }
+                };
+                downloadThread.run();
+                logger.info("you are downloading: " + currentLink + " to " + Constants.DEFAULT_SAVE_LOCATION + " in a separate thread");
+
             } catch (Exception e){
                 logger.error(e.getMessage(), e);
                 Alert alert = new Alert(Alert.AlertType.ERROR);
