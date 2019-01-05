@@ -1,6 +1,8 @@
 package net.ali4j.youtbrowder;
 
 import com.github.axet.vget.VGet;
+import com.github.axet.vget.vhs.YouTubeInfo;
+import com.github.axet.vget.vhs.YouTubeParser;
 import com.sun.webkit.dom.HTMLAnchorElementImpl;
 import com.sun.webkit.dom.HTMLDocumentImpl;
 import javafx.application.Application;
@@ -12,6 +14,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -19,6 +22,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
+import net.ali4j.youtbrowder.downloader.DownloadVideo;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -34,6 +38,7 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.List;
 
 
 /**
@@ -52,6 +57,7 @@ public class YoutBrowder extends Application {
     private Button exitButton;
     private Button optionsButton;
     private TextField locationField;
+    private TableView<DownloadVideo> downloadTable;
 
     private static final String YOUTUBE_VIDEO_URL_PATTERN = "^(https:\\/\\/)(www\\.)?(youtube.com\\/watch\\?v=).+$";
     private static final String YOUTUBE_URL_PATTERN = "^(https:\\/\\/)(www\\.)?(youtube.com)\\/?$";
@@ -205,8 +211,10 @@ public class YoutBrowder extends Application {
                 Runnable downloadThread = () -> {
                     try {
                         URL videoUrl = new URL(videoUrlString);
-                        VGet v = new VGet(videoUrl, new File(Constants.DEFAULT_SAVE_LOCATION));
-                        v.download();
+                        YouTubeInfo currentVideoInfo = new YouTubeInfo(videoUrl);
+                        List<YouTubeParser.VideoDownload> currentVideoDownloadLinks = YoutubeParserHelper.getInstance().extractLinks(currentVideoInfo);
+                        for (YouTubeParser.VideoDownload downloadLink: currentVideoDownloadLinks)
+                            logger.debug(downloadLink.toString());
                     }catch(MalformedURLException e){
                         logger.error("exception happened while downloading file, url is not valid");
                         Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -257,6 +265,9 @@ public class YoutBrowder extends Application {
         exitButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
         exitButton.setDefaultButton(true);
         exitButton.setOnAction(exitAction);
+
+        downloadTable = new TableView<>();
+
 
 
         // Layout logic
