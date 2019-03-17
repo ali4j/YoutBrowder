@@ -1,6 +1,5 @@
 package net.ali4j.youtbrowder;
 
-import com.github.axet.vget.VGet;
 import com.github.axet.vget.vhs.YouTubeInfo;
 import com.github.axet.vget.vhs.YouTubeParser;
 import com.sun.webkit.dom.HTMLAnchorElementImpl;
@@ -22,7 +21,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
-import net.ali4j.youtbrowder.downloader.DownloadVideo;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -32,7 +30,6 @@ import org.w3c.dom.events.EventListener;
 import org.w3c.dom.events.EventTarget;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
@@ -57,10 +54,11 @@ public class YoutBrowder extends Application {
     private Button exitButton;
     private Button optionsButton;
     private TextField locationField;
-    private TableView<DownloadVideo> downloadTable;
 
     private static final String YOUTUBE_VIDEO_URL_PATTERN = "^(https:\\/\\/)(www\\.)?(youtube.com\\/watch\\?v=).+$";
     private static final String YOUTUBE_URL_PATTERN = "^(https:\\/\\/)(www\\.)?(youtube.com)\\/?$";
+
+
 
 
     public static void setOptions(){
@@ -201,18 +199,17 @@ public class YoutBrowder extends Application {
             logger.debug("download current is clicked");
             try{
                 String fullLink = Constants.DEFAULT_URL + currentLink;
-                if(fullLink==null | !fullLink.matches(YOUTUBE_VIDEO_URL_PATTERN)){
+                if(!fullLink.matches(YOUTUBE_VIDEO_URL_PATTERN)){
                     logger.info("currentLink="+fullLink+ " is not valid youtube link");
                     throw new MalformedURLException("please click on a youtube video link");
                 }
 
-                String videoUrlString = fullLink;
-
                 Runnable downloadThread = () -> {
                     try {
-                        URL videoUrl = new URL(videoUrlString);
+                        URL videoUrl = new URL(fullLink);
                         YouTubeInfo currentVideoInfo = new YouTubeInfo(videoUrl);
-                        List<YouTubeParser.VideoDownload> currentVideoDownloadLinks = YoutubeParserHelper.getInstance().extractLinks(currentVideoInfo);
+                        List<YouTubeParser.VideoDownload> currentVideoDownloadLinks = YoutubeParserHelper.getInstance()
+                                .extractLinks(currentVideoInfo);
                         for (YouTubeParser.VideoDownload downloadLink: currentVideoDownloadLinks)
                             logger.debug(downloadLink.toString());
                     }catch(MalformedURLException e){
@@ -261,18 +258,20 @@ public class YoutBrowder extends Application {
         optionsButton.setDefaultButton(true);
         optionsButton.setOnAction(optionsAction);
 
+        Button downloadListButton = new Button("List");
+        downloadListButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
+        downloadListButton.setDefaultButton(true);
+
+
         exitButton = new Button("Exit");
         exitButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
         exitButton.setDefaultButton(true);
         exitButton.setOnAction(exitAction);
 
-        downloadTable = new TableView<>();
-
-
 
         // Layout logic
         HBox hBox = new HBox(5);
-        hBox.getChildren().setAll(locationField,downloadCurrentLinkButton, goButton, stopButton, optionsButton, exitButton);
+        hBox.getChildren().setAll(locationField,downloadCurrentLinkButton, goButton, stopButton, downloadListButton, optionsButton, exitButton);
         HBox.setHgrow(locationField, Priority.ALWAYS);
 
         VBox vBox = new VBox(5);

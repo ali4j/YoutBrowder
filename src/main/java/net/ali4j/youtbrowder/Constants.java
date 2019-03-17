@@ -26,5 +26,6 @@ public interface Constants {
     String SCRIPT          = "$(\"a:visible\").each(function() {$(this).css(\"text-transform\", \"uppercase\");});";
     String REGEXP_SCRIPT   = "$(\"a[id='video-title']\").each(function() {$(this).css(\"text-transform\", \"uppercase\");});";
 
+    Integer THREADPOOLSIZE = 10;
 
 }

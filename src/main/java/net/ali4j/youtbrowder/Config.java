@@ -17,46 +17,55 @@ public class Config {
     private static String HTTPPROXYPORT = null;
     private static String HTTPSPROXYHOST = null;
     private static String HTTPSPROXYPORT = null;
+    private static String YOUTBROWDERTEMP = null;
 
 
-    public static String getHTTPSPROXYPORT() {
+    static String getHTTPSPROXYPORT() {
         return HTTPSPROXYPORT;
     }
 
-    public static String getHTTPSPROXYHOST() {
+    static String getHTTPSPROXYHOST() {
         return HTTPSPROXYHOST;
     }
 
-    public static String getHTTPPROXYPORT() {
+    static String getHTTPPROXYPORT() {
         return HTTPPROXYPORT;
     }
 
-    public static String getHTTPPROXYHOST() {
+    static String getHTTPPROXYHOST() {
         return HTTPPROXYHOST;
     }
 
-    public static boolean isUSEPROXY() {
+    static String getYOUTBROWDERTEMP(){
+        return YOUTBROWDERTEMP;
+    }
+
+    static boolean isUSEPROXY() {
         return USEPROXY;
     }
 
-    public static void setHTTPSPROXYPORT(String HTTPSPROXYPORT) {
+    static void setHTTPSPROXYPORT(String HTTPSPROXYPORT) {
         Config.HTTPSPROXYPORT = HTTPSPROXYPORT;
     }
 
-    public static void setHTTPSPROXYHOST(String HTTPSPROXYHOST) {
+    static void setHTTPSPROXYHOST(String HTTPSPROXYHOST) {
         Config.HTTPSPROXYHOST = HTTPSPROXYHOST;
     }
 
-    public static void setHTTPPROXYPORT(String HTTPPROXYPORT) {
+    static void setHTTPPROXYPORT(String HTTPPROXYPORT) {
         Config.HTTPPROXYPORT = HTTPPROXYPORT;
     }
 
-    public static void setHTTPPROXYHOST(String HTTPPROXYHOST) {
+    static void setHTTPPROXYHOST(String HTTPPROXYHOST) {
         Config.HTTPPROXYHOST = HTTPPROXYHOST;
     }
 
-    public static void setUSEPROXY(boolean USEPROXY) {
+    static void setUSEPROXY(boolean USEPROXY) {
         Config.USEPROXY = USEPROXY;
+    }
+
+    void setYOUTBROWDERTEMP(String YOUTBROWDERTEMP){
+        Config.YOUTBROWDERTEMP = YOUTBROWDERTEMP;
     }
 
 
@@ -75,6 +84,7 @@ public class Config {
                 HTTPPROXYPORT = props.getProperty("http.proxy.port");
                 HTTPSPROXYHOST = props.getProperty("https.proxy.host");
                 HTTPSPROXYPORT = props.getProperty("https.proxy.port");
+                YOUTBROWDERTEMP = props.getProperty("temp.directory");
                 logger.info("config instance is loaded from file in config location file");
             } catch (IOException ioe) {
                 logger.error(ioe.getMessage());
@@ -83,6 +93,7 @@ public class Config {
                 HTTPPROXYPORT = Constants.HTTP_PROXY_PORT;
                 HTTPSPROXYHOST = Constants.HTTPS_PROXY_HOST;
                 HTTPSPROXYPORT = Constants.HTTPS_PROXY_PORT;
+                YOUTBROWDERTEMP = Constants.DEFAULT_SAVE_LOCATION;
                 logger.info("ioe exception, config instance is loaded with default values");
             }
         } else {
@@ -91,18 +102,25 @@ public class Config {
             HTTPPROXYPORT = Constants.HTTP_PROXY_PORT;
             HTTPSPROXYHOST = Constants.HTTPS_PROXY_HOST;
             HTTPSPROXYPORT = Constants.HTTPS_PROXY_PORT;
+            YOUTBROWDERTEMP = Constants.DEFAULT_SAVE_LOCATION;
             logger.info("config file does not exist in default location, config instance is loaded with default values");
         }
     }
 
 
-    public static void store() {
+    static void store() {
         File file = new File(Constants.CONFIG_FILE_LOCATION);
         OutputStream outputStream = null;
         try {
             if (!file.exists()) {
-                file.getParentFile().mkdirs();
-                file.createNewFile();
+                if(file.getParentFile().mkdirs())
+                    if(file.createNewFile())
+                        logger.info("YoutBrowder config file is created");
+                    else
+                        logger.info("unable to create config file for YoutBrowder");
+                else
+                    logger.info("unable to create YoutBrowder config file directory");
+
             }
 
             outputStream = new FileOutputStream(file);
@@ -111,6 +129,7 @@ public class Config {
             props.setProperty("http.proxy.port", getHTTPPROXYPORT());
             props.setProperty("https.proxy.host", getHTTPSPROXYHOST());
             props.setProperty("https.proxy.port", getHTTPSPROXYPORT());
+            props.setProperty("temp.directory", getYOUTBROWDERTEMP());
             props.store(outputStream, null);
             logger.info("config instance is stored in properties file in default location:" + Constants.CONFIG_FILE_LOCATION);
         } catch (IOException ioe) {
